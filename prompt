@@ -1,0 +1,44 @@
+prompt_TD = """
+使用标签<text></text>括起来的文本是一段新闻摘要，
+请从文字描述的角度出发逐步分析该新闻的真实性，
+并以JSON的格式输出，输出样例如下：
+{
+    'authenticity': '仅使用一个单词表示：fake or real',
+    'Reason': '从文字描述的角度判断该新闻真假性的依据'
+}
+<text>{news text}</text>
+"""
+
+prompt_IM = """
+给定的图片是一篇新闻的封面，
+请从图片是否有经过编辑或者合成的角度逐步分析该新闻的真假性，
+并以JSON的格式输出，使用<out></out>括起来的是一个输出样例,
+{
+    'authenticity': '仅使用一个单词表示：fake or real',
+    'Reason': '判断该新闻真假性的依据'
+}
+"""
+
+
+prompt_IT = """
+使用标签<text></text>括起来的文本是一篇新闻摘要，给定的图片为该新闻的封面，
+请从图片与文字描述是否存在矛盾角度逐步判断该新闻的真假性，
+并以JSON的格式输出，输出样例如下：
+{
+    'authenticity': '仅使用一个单词表示：fake or real',
+    'Reason': '判断该新闻真假性的依据'
+}
+<text>{news text}</text>
+"""
+
+prompt_CS = """
+使用标签<text></text>括起来的文本是一篇新闻摘要，而给定的图片为该新闻的封面，
+请从常识的角度通过文字和给定的图片逐步判断该新闻的真假性，
+并以JSON的格式输出，输出样例如下：
+{
+    'authenticity': '仅使用一个单词表示：fake or real',
+    'Reason': '判断该新闻真假性的依据'
+}
+<text>{news text}</text>
+"""
+
