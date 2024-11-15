@@ -58,7 +58,7 @@ The text contained in the <text></text> tag is a news summary.
 Please analyze the authenticity of this news article step by step from the perspective of the common sense.
 Output in the following format：
 - authenticity: a single word: fake or real
-- reason: The basis for judging the authenticity of the news from the perspective of the common sense.
+- reason: The basis for judging the authenticity of the news from the perspective of the  .
 Several examples are provided below.
 """
 
