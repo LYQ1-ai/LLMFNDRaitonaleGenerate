@@ -132,7 +132,7 @@ def generate_llm_predict(model,pred_df,few_shot_df, shot_nums=5):
 def calculate_acc(df):
     print(f"sum data {df.shape[0]}")
     for rationale_name in prompt_mode.keys():
-        legal_data_df = df[(df[f'{rationale_name}_pred']!=-1) & (df[f'{rationale_name}'] is not None)]
+        legal_data_df = df[(df[f'{rationale_name}_pred']!=-1) & (df[f'{rationale_name}_rationale'] is not None)]
         print(f"{rationale_name} : acc {(legal_data_df[f'{rationale_name}_acc'] == 1).sum() / legal_data_df.shape[0]} , "
               f" acc_real {((legal_data_df[f'{rationale_name}_acc'] == 1) & (legal_data_df['label'] == 1)).sum() / (legal_data_df['label'] == 1).sum()} ,"
               f" acc_fake {((legal_data_df[f'{rationale_name}_acc'] == 1) & (legal_data_df['label'] == 0)).sum() / (legal_data_df['label'] == 0).sum()} ,")

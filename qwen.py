@@ -14,13 +14,20 @@ import Util
 import data_loader
 import pickle
 
+import argparse
+
+from data_loader import load_en_image_text_pair_goss, load_twitter_data, load_politifact
+
 label_dict = {
     'fake':0,
     'real':1,
     'other':2,
     0:'fake',
     1:'real',
-    2:'other'
+    2:'other',
+    0.0:'fake',
+    1.0:'real',
+    2.0:'other'
 }
 
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'max_split_size_mb:128'
@@ -66,6 +73,19 @@ prompt_mode = {
     'td': {'text'},
     'cs': {'text'},
 }
+
+dataloader_func_dict = {
+    'gossipcop':load_en_image_text_pair_goss,
+    'twitter':load_twitter_data,
+    'politifact':load_politifact
+}
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', type=str)
+parser.add_argument('--qwen_path', type=str,default='/home/lyq/Model/Qwen2-VL-7B-Instruct')
+parser.add_argument('--root_path', type=str,default='/home/lyq/DataSet/FakeNews/politifact')
+parser.add_argument('--few_shot_dir', type=str,default='/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en/few_shot')
+args = parser.parse_args()
 
 
 
@@ -171,7 +191,7 @@ def validate_model_output(output):
 class Qwen2VL:
 
     def __init__(self):
-        model_dir = 'Qwen2-VL-7B-Instruct'
+        model_dir = args.qwen_path
         self.model = Qwen2VLForConditionalGeneration.from_pretrained(
             model_dir, torch_dtype="auto", device_map="auto"
         )
@@ -314,12 +334,16 @@ def write_LLM_Rationale(data,data_rationales,save_file_name):
 
 
 if __name__ == '__main__':
+
+
+
     Qwen2VL = Qwen2VL()
-    #data_name = 'gossipcop'
-    data_name = 'twitter'
-    #data = data_loader.load_en_image_text_pair_goss()
-    data = data_loader.load_twitter_data()
-    cs_shot_df ,td_shot_df = data_loader.load_gossipcop_fewshot(4)
+
+    data_name = args.dataset
+    print(f'generate : {data_name}')
+
+    data = dataloader_func_dict[data_name](root_path=args.root_path)
+    cs_shot_df ,td_shot_df = data_loader.load_gossipcop_fewshot(args.few_shot_dir,4)
 
     few_shot_df_dict = {
         'td':td_shot_df,
@@ -337,8 +361,7 @@ if __name__ == '__main__':
         with open(cache_file, 'rb') as f:
             data_rationales[rationale_name] = pickle.load(f)
 
-    #save_file = '/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en/gossipcop_llm_rationales.csv'
-    save_file = '/home/lyq/DataSet/FakeNews/twitter_dataset/twitter_llm_rationales.csv'
+    save_file = f'/home/lyq/DataSet/FakeNews/twitter_dataset/{data_name}_llm_rationales.csv'
     write_LLM_Rationale(data,data_rationales,save_file)
     Util.calculate_acc(pd.read_csv(save_file))
 

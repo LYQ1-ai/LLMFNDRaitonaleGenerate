@@ -6,6 +6,18 @@ import pandas as pd
 
 import Util
 
+label_dict = {
+    'fake':0,
+    'real':1,
+    'other':2,
+    0:'fake',
+    1:'real',
+    2:'other',
+    0.0:'fake',
+    1.0:'real',
+    2.0:'other'
+}
+
 
 class ImageTextPairDataset(Dataset):
 
@@ -37,8 +49,8 @@ class ImageTextPairDataset(Dataset):
         }
 
 
-def load_en_image_text_pair_goss(batch_size = 1):
-    data_dir = '/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en'
+def load_en_image_text_pair_goss(root_path='/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en',batch_size = 1):
+    data_dir = root_path
     file_path = f'{data_dir}/gossipcop.csv'
     df = pd.read_csv(file_path)
     df['image_id'] = df['id']
@@ -46,19 +58,19 @@ def load_en_image_text_pair_goss(batch_size = 1):
     dataset = ImageTextPairDataset(df)
     return DataLoader(dataset, batch_size,False,num_workers=4)
 
-def load_gossipcop_fewshot(show_nums=4):
-    cs_df = pd.read_csv('/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en/few_shot/cs_shot.csv')
-    td_df = pd.read_csv('/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en/few_shot/td_shot.csv')
+def load_gossipcop_fewshot(few_shot_dir,show_nums=4):
+    cs_df = pd.read_csv(f'{few_shot_dir}/cs_shot.csv')
+    td_df = pd.read_csv(f'{few_shot_dir}/td_shot.csv')
     return Util.get_few_shot(cs_df,show_nums), Util.get_few_shot(td_df,show_nums)
 
 def get_twitter_image_url_dict():
     image_dir = '/home/lyq/DataSet/FakeNews/twitter_dataset/images'
     return {
-       file.split('.')[0] : f'file://{image_dir}/file' for file in os.listdir(image_dir)
+       file.split('.')[0] : f'file://{image_dir}/{file}' for file in os.listdir(image_dir)
     }
 
-def load_twitter_data(batch_size = 1):
-    data_dir = '/home/lyq/DataSet/FakeNews/twitter_dataset'
+def load_twitter_data(root_path='/home/lyq/DataSet/FakeNews/twitter_dataset',batch_size = 1):
+    data_dir = root_path
     file_path = f'{data_dir}/twitter.csv'
     df = pd.read_csv(file_path)
     image_id2url_dict = get_twitter_image_url_dict()
@@ -75,8 +87,21 @@ def load_twitter_data(batch_size = 1):
     dataset = ImageTextPairDataset(df)
     return DataLoader(dataset, batch_size,False,num_workers=4)
 
-if __name__ == '__main__':
-    dl = load_en_image_text_pair(2)
-    for batch in dl:
-        print(batch)
-        break
+def load_politifact(root_path="/home/lyq/DataSet/FakeNews/politifact",batch_size=1):
+    data_dir = root_path
+    file_path = f'{data_dir}/politifact.csv'
+    df = pd.read_csv(file_path)
+    df = pd.DataFrame({
+        'id': df['QueryID'],
+        'text': df['QueryText'],
+        'label': df['Label'].apply(lambda x : label_dict[x]),
+        'publish_date': "",
+        'image_id': df['QueryImages'],
+        'image_url': df['QueryImages'].apply(lambda x: f'file://{data_dir}/{x}'),
+    })
+    dataset = ImageTextPairDataset(df)
+    return DataLoader(dataset, batch_size,False,num_workers=4)
+
+
+
+
