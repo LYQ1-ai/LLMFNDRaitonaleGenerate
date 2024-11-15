@@ -1,7 +1,176 @@
-|             | acc    | acc_real | acc_fake |
-| ----------- | ------ | -------- | -------- |
-| ChatGLM3-6B | 0.5797 | 0.6252   | 0.5329  |
-| Llama3-8B   | 0.6630 | 0.4738  | 0.8584   |
+# LLM FND Rationale Generate
+
+- 本仓库用于通过LLM判断新闻真假性并生成Rationale,基本架构如下
+
+  
+
+![](/home/lyq/PycharmProjects/llamaRationaleGenerate/LLMFNDRationaleGenerate.png)
+
+
+
+- 环境搭建
+
+  - 基本环境：CUDA 12.1，Python=3.10.15
+
+  ```shell
+  conda env create -f env.yaml
+  ```
+
+- ## 项目结构总览
+
+  - ```shell
+    .
+    ├── cache # 用来持久化LLM生成的数据，每生成100条会保存一次，如果程序崩溃可以快速恢复之前生成的结果，如果需要重新生成需要删除相应数据集的缓存
+    │   ├── gossipcop
+    │   │   ├── cs.pkl # cs开头为从常识角度进行分析，td为从文字描述角度进行分析
+    │   │   └── td.pkl
+    │   ├── politifact
+    │   │   ├── cs.pkl
+    │   │   └── td.pkl
+    │   └── twitter
+    │       ├── cs.pkl
+    │       └── td.pkl
+    ├── data # 数据集文件夹，输入和最终输出均在此文件夹
+    │   ├── gossipcop
+    │   │   ├── data_processor.ipynb # 数据预处理脚本
+    │   │   ├── gossipcop.csv# 数据预处理得到的结果
+    │   │   ├── gossipcop_llm_rationales.csv # 最终输出分割后的结果
+    │   │   ├── rationale_data_processor.ipynb# 数据后处理脚本
+    │   │   ├── test.csv #最终输出数据集分割后的结果
+    │   │   ├── train.csv
+    │   │   └── val.csv
+    │   ├── politifact
+    │   │   ├── data_processor.ipynb
+    │   │   ├── politifact.csv
+    │   │   └── politifact_llm_rationales.csv
+    │   └── twitter
+    │       ├── data_processor.ipynb
+    │       ├── rationale_data_processor.ipynb
+    │       ├── test.csv
+    │       ├── train.csv
+    │       ├── twitter.csv
+    │       ├── twitter_llm_rationales.csv
+    │       └── val.csv
+    ├── data_loader.py #加载原始数据集脚本
+    ├── env.yaml #环境依赖声明
+    ├──  .gitignore
+    ├── LLMFNDRationaleGenerate.png
+    ├── prompt 
+    ├── qwen.py #LLM生成脚本
+    ├── README.md
+    ├── run.sh #项目运行脚本
+    └── Util.py # 一些工具函数
+    ```
+
+- ## 预处理数据集
+
+  下面以gossipcop为例进行数据的预处理
+
+  - gossipcop
+
+    - 原始数据集可以通过[链接](https://drive.google.com/drive/folders/1rLrh5x5UlYskfbhhVyz523MKgmCDyuX2)获取(下载gossipcop_v3_origin.json)，相关图片可以通过[链接](https://drive.google.com/drive/folders/11okt9IRDxXgfTr7Ae1wxl9CHZC1PphhC)获取
+
+    - 下载原始数据集后整理成以下结构
+
+      ```shell
+      .
+      ├── data_processor.ipynb # 预处理数据脚本
+      ├── gossipcop_v3_origin.json # 原始数据集
+      ├── images # 图片文件夹
+      ├── rationale_data_processor.ipynb # 后处理数据脚本
+      ```
+
+    - 通过data_processor.ipynb对gossipcop_v3_origin.json进行预处理得到gossipcop.csv
+
+    - **注意：请自行提供few_shot数据(csv格式)并指定few_shot所在的文件夹，基本结构如下**
+
+      ```shell
+      .
+      ├── cs_shot.csv 
+      └── td_shot.csv
+      
+      (这里使用json格式方便解释，json中的key对应csv中的列，实际上还是csv结构)
+      cs_shot.csv 结构如下：
+      {
+      	"text":"news text",
+      	"rationale": "rationale text",
+      	"label": "groud truth"
+      }
+      ```
+
+- ## 运行
+
+  - 运行qwen.py脚本（或者自行修改run.sh）
+
+    ```shell
+    python qwen.py --dataset politifact\ # 选用的数据集
+                   --qwen_path /the/path/of/qwen\ # 本地Qwen模型路径
+                   --root_path /the/path/of/you/dataset\ # 数据集文件目录路径
+                   -few_shot_dir /the/path/of/you/few_shot_data\ # few_shot数据目录路径
+    ```
+
+  - 运行结束后得到gossipcop_llm_rationales.csv，gossipcop.csv结构如下
+
+    ```shell
+    {
+        "content": "news text",
+        "label": "0 or 1,news label",
+        "source_id": "text_id",
+        "image_id": "image_id,use to find image file",
+        "td_rationale": "rationale from the perspective of the textual description",
+        "td_pred": "1 or 0,llm pred news real or fake from the perspective of the textual description",
+        "td_acc": "1 or 0,llm pred Right or wrong from the perspective of the textual description",
+        "cs_rationale": "rationale from the perspective of the common sense",
+        "cs_pred": "1 or 0,llm pred news real or fake from the perspective of the common sense",
+        "cs_acc": "1 or 0,llm pred Right or wrong from the perspective of the common sense",
+        "split": "train or val or test"
+      },
+    ```
+
+  - 通过rationale_data_processor.ipynb对gossipcop_llm_rationales.csv进行分割和过滤得到，最终文件结构如下
+
+    ```shell
+    .
+    ├── data_processor.ipynb
+    ├── gossipcop.csv
+    ├── gossipcop_llm_rationales.csv
+    ├── gossipcop_v3_origin.json
+    ├── images
+    ├── rationale_data_processor.ipynb
+    ├── test.csv
+    ├── train.csv
+    └── val.csv
+    ```
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 四种数据集数据分布
 

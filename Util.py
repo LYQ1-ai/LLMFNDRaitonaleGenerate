@@ -9,10 +9,15 @@ from tqdm import tqdm
 from data_loader import load_gossipcop_fewshot
 
 label_dict = {
-    'real':1,
     'fake':0,
+    'real':1,
+    'other':2,
+    0:'fake',
     1:'real',
-    0:'fake'
+    2:'other',
+    0.0:'fake',
+    1.0:'real',
+    2.0:'other'
 }
 
 

@@ -58,7 +58,7 @@ The text contained in the <text></text> tag is a news summary.
 Please analyze the authenticity of this news article step by step from the perspective of the common sense.
 Output in the following format：
 - authenticity: a single word: fake or real
-- reason: The basis for judging the authenticity of the news from the perspective of the  .
+- reason: The basis for judging the authenticity of the news from the perspective of the common sense.
 Several examples are provided below.
 """
 
@@ -85,6 +85,9 @@ parser.add_argument('--dataset', type=str)
 parser.add_argument('--qwen_path', type=str,default='/home/lyq/Model/Qwen2-VL-7B-Instruct')
 parser.add_argument('--root_path', type=str,default='/home/lyq/DataSet/FakeNews/politifact')
 parser.add_argument('--few_shot_dir', type=str,default='/home/lyq/DataSet/FakeNews/ARG_Image_dataset/en/few_shot')
+parser.add_argument('--few_shot_nums', type=int,default=4)
+
+
 args = parser.parse_args()
 
 
@@ -343,7 +346,7 @@ if __name__ == '__main__':
     print(f'generate : {data_name}')
 
     data = dataloader_func_dict[data_name](root_path=args.root_path)
-    cs_shot_df ,td_shot_df = data_loader.load_gossipcop_fewshot(args.few_shot_dir,4)
+    cs_shot_df ,td_shot_df = data_loader.load_gossipcop_fewshot(args.few_shot_dir,args.few_shot_nums)
 
     few_shot_df_dict = {
         'td':td_shot_df,
@@ -361,7 +364,7 @@ if __name__ == '__main__':
         with open(cache_file, 'rb') as f:
             data_rationales[rationale_name] = pickle.load(f)
 
-    save_file = f'/home/lyq/DataSet/FakeNews/twitter_dataset/{data_name}_llm_rationales.csv'
+    save_file = f'{args.root_path}/{data_name}/{data_name}_llm_rationales.csv'
     write_LLM_Rationale(data,data_rationales,save_file)
     Util.calculate_acc(pd.read_csv(save_file))
 
