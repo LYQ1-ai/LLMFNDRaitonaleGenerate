@@ -4,7 +4,7 @@
 
   
 
-![](/home/lyq/PycharmProjects/llamaRationaleGenerate/LLMFNDRationaleGenerate.png)
+![](LLMFNDRationaleGenerate.png)
 
 
 
