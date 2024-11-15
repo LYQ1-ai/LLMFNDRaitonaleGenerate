@@ -62,9 +62,7 @@
     └── Util.py # 一些工具函数
     ```
 
-- ## 预处理数据集
-
-  下面以gossipcop为例进行数据的预处理
+- ## 数据集
 
   - gossipcop
 
@@ -74,11 +72,29 @@
 
       ```shell
       .
-      ├── data_processor.ipynb # 预处理数据脚本
       ├── gossipcop_v3_origin.json # 原始数据集
       ├── images # 图片文件夹
-      ├── rationale_data_processor.ipynb # 后处理数据脚本
       ```
+
+  - twitter
+
+    - 原始数据集通过该[仓库](https://github.com/plw-study/MRML)可以找到下载地址
+
+    - 下载原始数据集后整理成以下结构
+
+      ```shell
+      .
+      ├── devset
+      ├── testset
+      ```
+
+    
+
+- ## 预处理数据集
+
+  下面以gossipcop为例进行数据的预处理
+
+  - gossipcop
 
     - 通过data_processor.ipynb对gossipcop_v3_origin.json进行预处理得到gossipcop.csv
 
@@ -100,13 +116,20 @@
 
 - ## 运行
 
-  - 运行qwen.py脚本（或者自行修改run.sh）
+  - 运行qwen.py脚本（或者自行修改run.sh并执行run.sh）
 
     ```shell
-    python qwen.py --dataset politifact\ # 选用的数据集
-                   --qwen_path /the/path/of/qwen\ # 本地Qwen模型路径
-                   --root_path /the/path/of/you/dataset\ # 数据集文件目录路径
-                   -few_shot_dir /the/path/of/you/few_shot_data\ # few_shot数据目录路径
+    
+    # --dataset:选用的数据集
+    # --qwen_path:本地Qwen模型路径
+    # --root_path:数据集文件目录路径
+    # --few_shot_dir:few_shot数据目录路径
+    # --few_shot_nums:提供的few-shot数量
+    python qwen.py --dataset politifact \
+                   --qwen_path /the/path/of/qwen \
+                   --root_path /the/path/of/you/dataset \
+                   --few_shot_dir /the/path/of/you/few_shot_data \
+                   --few_shot_nums 4
     ```
 
   - 运行结束后得到gossipcop_llm_rationales.csv，gossipcop.csv结构如下
